@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -10,27 +11,27 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                bat 'mvn clean compile'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                bat 'mvn test'
             }
         }
 
         stage('Package') {
             steps {
-                sh 'mvn package'
+                bat 'mvn package'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh '''
-                    export JENKINS_NODE_COOKIE=dontKillMe
-                    nohup java -jar target/TodoProject-1.0-SNAPSHOT.jar > app.log 2>&1 &
+                bat '''
+                    set JENKINS_NODE_COOKIE=dontKillMe
+                    start "" /B java -jar target\\TodoProject-1.0-SNAPSHOT.jar > app.log 2>&1
                 '''
             }
         }
@@ -42,10 +43,10 @@ pipeline {
                 subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """Todo Maven CI/CD Pipeline completed successfully.
 
-                Build: ${env.BUILD_URL}
+Build: ${env.BUILD_URL}
 
-                Application deployed on Jenkins server.
-                """,
+Application deployed on Jenkins server.
+""",
                 to: 'kudirillapravallika.23.cse@anits.edu.in'
             )
         }
@@ -55,8 +56,8 @@ pipeline {
                 subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """Todo Maven CI/CD Pipeline failed.
 
-                Build: ${env.BUILD_URL}
-                """,
+Build: ${env.BUILD_URL}
+""",
                 to: 'kudirillapravallika.23.cse@anits.edu.in'
             )
         }
