@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo Application</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .add-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .add-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .edit-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .complete-btn {
+            background: #673AB7;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .todo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .task {
+            flex: 1;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Todo Application</h1>
+
+<div class="add-section">
+    <input type="text" id="taskInput" placeholder="Enter a task">
+    <button class="add-btn" onclick="addTask()">Add Task</button>
+</div>
+
+<div id="todoList"></div>
+
+<script>
+
+const API_URL = "/api/todos";
+
+
+// Load tasks when website opens
+function loadTasks() {
+
+    fetch(API_URL)
+        .then(response => response.json())
+        .then(todos => {
+
+            const list = document.getElementById("todoList");
+
+            list.innerHTML = "";
+
+            todos.forEach(todo => {
+
+                const div = document.createElement("div");
+
+                div.className = "todo";
+
+                div.innerHTML = `
+                    <span class="task ${todo.completed ? 'completed' : ''}">
+                        ${todo.id}. ${todo.task}
+                    </span>
+
+                    <button class="complete-btn"
+                            onclick="completeTask(${todo.id})">
+                        Complete
+                    </button>
+
+                    <button class="edit-btn"
+                            onclick="editTask(${todo.id}, '${todo.task.replace(/'/g, "\\'")}')">
+                        Edit
+                    </button>
+
+                    <button class="delete-btn"
+                            onclick="deleteTask(${todo.id})">
+                        Delete
+                    </button>
+                `;
+
+                list.appendChild(div);
+            });
+        });
+}
+
+
+// Add task
+function addTask() {
+
+    const input = document.getElementById("taskInput");
+
+    const task = input.value.trim();
+
+    if (task === "") {
+        alert("Please enter a task");
+        return;
+    }
+
+    fetch(API_URL, {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            task: task
+        })
+
+    })
+    .then(response => response.json())
+    .then(() => {
+
+        input.value = "";
+
+        loadTasks();
+    });
+}
+
+
+// Complete task
+function completeTask(id) {
+
+    fetch(`${API_URL}/${id}/complete`, {
+
+        method: "PUT"
+
+    })
+    .then(response => response.json())
+    .then(() => {
+
+        loadTasks();
+    });
+}
+
+
+// Update task
+function editTask(id, oldTask) {
+
+    const newTask = prompt("Update task:", oldTask);
+
+    if (newTask === null || newTask.trim() === "") {
+        return;
+    }
+
+    fetch(`${API_URL}/${id}`, {
+
+        method: "PUT",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            task: newTask,
+            completed: false
+        })
+
+    })
+    .then(response => response.json())
+    .then(() => {
+
+        loadTasks();
+    });
+}
+
+
+// Delete task
+function deleteTask(id) {
+
+    if (!confirm("Delete this task?")) {
+        return;
+    }
+
+    fetch(`${API_URL}/${id}`, {
+
+        method: "DELETE"
+
+    })
+    .then(response => response.text())
+    .then(() => {
+
+        loadTasks();
+    });
+}
+
+
+// Initial load
+loadTasks();
+
+</script>
+
+</body>
+</html>
